@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Uploaded / generated files
+uploads/
+
+# Environment files (never commit real secrets)
+.env
+.env.*
+!.env.example
+
+# Coverage / logs
+coverage/
+*.log
