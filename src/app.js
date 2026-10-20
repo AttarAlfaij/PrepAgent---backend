@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const mongoose = require('mongoose');
 const { notFound, errorHandler } = require('./middleware/errorMiddleware');
 
 const authRoutes = require('./routes/authRoutes');
@@ -40,11 +41,37 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Static route for serving uploaded files (if needed)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Root status endpoint
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'online',
+    message: 'PrepAgent AI API is running',
+    timestamp: new Date().toISOString(),
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({
     status: 'online',
     message: 'PrepAgent AI API is active',
+    timestamp: new Date().toISOString(),
+  });
+});
+
+// Health endpoint with a live database status check.
+// mongoose.connection.readyState: 0=disconnected, 1=connected, 2=connecting, 3=disconnecting
+const dbStateNames = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+app.get('/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbConnected = dbState === 1;
+  res.status(dbConnected ? 200 : 503).json({
+    status: dbConnected ? 'online' : 'degraded',
+    message: 'PrepAgent AI API is running',
+    database: {
+      connected: dbConnected,
+      state: dbStateNames[dbState] || 'unknown',
+    },
     timestamp: new Date().toISOString(),
   });
 });
